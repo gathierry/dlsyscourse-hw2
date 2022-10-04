@@ -364,9 +364,7 @@ class Tensor(Value):
             return needle.ops.MulScalar(other)(self)
 
     def __pow__(self, other):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        return needle.ops.PowerScalar(other)(self)
 
     def __sub__(self, other):
         if isinstance(other, Tensor):
@@ -422,9 +420,19 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     # Traverse graph in reverse topological order given the output_node that we are taking gradient wrt.
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    for i in reverse_topo_order:  # start from output_tensor
+        v_i = sum_node_list(node_to_output_grads_list[i])
+        if i.is_leaf():
+            v_ki_list = [v_i]
+        else:
+            v_ki_list = i.op.gradient(v_i, i)
+        for k, v_ki in zip(i.inputs, v_ki_list):
+            if k not in node_to_output_grads_list:
+                node_to_output_grads_list[k] = []
+            node_to_output_grads_list[k].append(v_ki)
+        
+    for k, v in node_to_output_grads_list.items():
+        k.grad = sum_node_list(v)
 
 
 def find_topo_sort(node_list: List[Value]) -> List[Value]:
@@ -435,16 +443,21 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     after all its predecessors are traversed due to post-order DFS, we get a topological
     sort.
     """
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    visited = []
+    topo_order = []
+    for node in node_list:
+        topo_sort_dfs(node, visited, topo_order)
+    return topo_order
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    if node in visited:
+        return
+    for input_node in node.inputs:
+        topo_sort_dfs(input_node, visited, topo_order)
+    visited.append(node)
+    topo_order.append(node)
 
 
 ##############################
